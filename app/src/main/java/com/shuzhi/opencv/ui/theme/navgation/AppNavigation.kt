@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -16,7 +17,10 @@ import com.shuzhi.opencv.ui.theme.croppage.CropScreenViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreen
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreenViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
+import com.shuzhi.opencv.ui.theme.mainPage.rotateBitmap
+import com.shuzhi.opencv.ui.theme.pdf.PdfManager
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageScreen
+import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageViewModel
 
 /**
  *@author :yinxiaolong
@@ -61,7 +65,8 @@ fun AppNavgation(
             CropScreen(appVm,navController,cropScreenViewModel,index)
         }
         composable(Screen.SelectedImagePage.route) {
-            SelectedImageScreen(appVm){key:String,index:Int->
+            val vm :SelectedImageViewModel = viewModel()
+            SelectedImageScreen(appVm,vm,{key:String,index:Int->
                 when(key){
                     "添加"->{
                         navController.popBackStack()
@@ -73,21 +78,28 @@ fun AppNavgation(
                         navController.navigate("${Screen.CropImagePage.route}/$index")
                     }
                     "旋转"->{
-
+                        appVm.imageCroped[index] = appVm.imageCroped[index].rotateBitmap(90)
                     }
                     "重新排序"->{
 
                     }
                     "删除"->{
+                        vm.showDeleteDialog = true
 
                     }
-                    "导出"->{
 
-                    }
                 }
-            }
+            }, onDelete = {
+
+            }, onGeneratePDF = {
+                PdfManager.saveBitmapsAsPdf(appVm.imageCroped,"xiaolong")
+            })
         }
 
+
+        composable(Screen.PDFResultPage.route) {
+
+        }
     }
 
 }
@@ -97,4 +109,5 @@ sealed class Screen(val route: String) {
     object Main: Screen("main_screen")
     object CropImagePage: Screen("Crop_Image_screen")
     object SelectedImagePage :Screen("selected_image_screen")
+    object PDFResultPage :Screen("pdf_result_page")
 }

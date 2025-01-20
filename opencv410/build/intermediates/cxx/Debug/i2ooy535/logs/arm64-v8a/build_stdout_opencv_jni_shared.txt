@@ -1,2 +1,0 @@
-ninja: Entering directory `F:\androdCode\opencv\opencv410\.cxx\Debug\i2ooy535\arm64-v8a'
-ninja: no work to do.

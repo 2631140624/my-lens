@@ -207,13 +207,6 @@ class MainActivity : ComponentActivity() {
         })
     }
 
-    fun Bitmap.rotateBitmap(rotationDegrees: Int): Bitmap {
-        if (rotationDegrees == 0) return this
-        val matrix = Matrix().apply {
-            postRotate(rotationDegrees.toFloat())
-        }
-        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -363,4 +356,12 @@ private fun sortPoints(points: List<Point>): List<Point> {
     val top = sorted.take(2).sortedBy { it.x }
     val bottom = sorted.takeLast(2).sortedBy { it.x }
     return listOf(top[0], top[1], bottom[1], bottom[0])
+}
+
+public fun Bitmap.rotateBitmap(rotationDegrees: Int): Bitmap {
+    if (rotationDegrees == 0) return this
+    val matrix = Matrix().apply {
+        postRotate(rotationDegrees.toFloat())
+    }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
 }
