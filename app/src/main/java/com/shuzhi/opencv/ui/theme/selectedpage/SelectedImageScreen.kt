@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,7 +44,9 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.ValueElement
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.shuzhi.opencv.R
 import com.shuzhi.opencv.ui.theme.app.OpenCvApp
@@ -73,11 +76,14 @@ fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,o
     })
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().background(color = Color.Black)
     ) {
         Text(
             "${pagerState.currentPage + 1}/${pagerState.pageCount}",
-            modifier = Modifier.padding(top = 10.dp)
+            modifier = Modifier.padding(top = 10.dp),
+            fontStyle = FontStyle.Italic,
+            color = Color.White,
+            fontSize =15.sp
         )
         // 使用 HorizontalPager 显示一组页面
         HorizontalPager(
@@ -97,7 +103,7 @@ fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,o
                 modifier = Modifier.wrapContentSize().scale(imgScale)
             )
         }
-        FlowRow() {
+        FlowRow(modifier = Modifier.background(Color.White).fillMaxHeight()) {
             toolMap.toList().forEach {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,modifier = Modifier.wrapContentSize().padding(5.dp).align(Alignment.CenterVertically)) {
                     Image(
@@ -108,7 +114,9 @@ fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,o
                                 onToolClicked(it.first,pagerState.currentPage)
                             },
                         contentDescription = null)
-                    Text("${it.first}")
+                    Text(
+                        text = it.first,
+                        fontStyle = FontStyle.Italic,)
                 }
             }
 

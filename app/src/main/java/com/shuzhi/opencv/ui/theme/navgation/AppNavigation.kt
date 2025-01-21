@@ -14,6 +14,7 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.shuzhi.opencv.ui.theme.croppage.CropScreen
 import com.shuzhi.opencv.ui.theme.croppage.CropScreenViewModel
+import com.shuzhi.opencv.ui.theme.filter.OpencvFilter
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreen
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreenViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
@@ -21,6 +22,7 @@ import com.shuzhi.opencv.ui.theme.mainPage.rotateBitmap
 import com.shuzhi.opencv.ui.theme.pdf.PdfManager
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageScreen
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageViewModel
+import org.opencv.imgproc.Imgproc
 
 /**
  *@author :yinxiaolong
@@ -68,22 +70,22 @@ fun AppNavgation(
             val vm :SelectedImageViewModel = viewModel()
             SelectedImageScreen(appVm,vm,{key:String,index:Int->
                 when(key){
-                    "添加"->{
+                    "添加" ->{
                         navController.popBackStack()
                     }
-                    "筛选器"->{
-
+                    "筛选器" ->{
+                        appVm.imageCroped[index] = OpencvFilter.filter1(appVm.imageCroped[index], Imgproc.COLORMAP_AUTUMN)
                     }
-                    "裁切"->{
+                    "裁切" ->{
                         navController.navigate("${Screen.CropImagePage.route}/$index")
                     }
-                    "旋转"->{
+                    "旋转" ->{
                         appVm.imageCroped[index] = appVm.imageCroped[index].rotateBitmap(90)
                     }
-                    "重新排序"->{
+                    "重新排序" ->{
 
                     }
-                    "删除"->{
+                    "删除" ->{
                         vm.showDeleteDialog = true
 
                     }

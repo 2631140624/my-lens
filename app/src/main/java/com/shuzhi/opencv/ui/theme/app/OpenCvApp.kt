@@ -3,6 +3,7 @@ package com.shuzhi.opencv.ui.theme.app
 import android.app.Application
 import android.content.Context
 import me.pqpo.smartcropperlib.SmartCropper
+import org.opencv.android.OpenCVLoader
 
 /**
  *@author :yinxiaolong
@@ -16,6 +17,9 @@ class OpenCvApp : Application() {
     override fun onCreate() {
         super.onCreate()
         appContext = this
+        //图像检测
         SmartCropper.buildImageDetector(this)
+        //opencv
+        val isOpenCVLoaderInit = OpenCVLoader.initLocal()
     }
 }

@@ -79,8 +79,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         vm.isPermissionGranted = allPermissionsGranted()
-        val isOpenCVLoaderInit = OpenCVLoader.initLocal()
-//        Log.d("Main","$isOpenCVLoaderInit")
+        //        Log.d("Main","$isOpenCVLoaderInit")
 //
 //        val img = loadImageFromAssets("img.png",assets)
 //
