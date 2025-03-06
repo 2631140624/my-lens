@@ -14,3 +14,29 @@ opencv410/build/intermediates/cxx
 .externalNativeBuild
 .cxx
 local.properties
+.dex
+# Android 官方推荐 .gitignore 模板
+# 来源：https://github.com/github/gitignore/blob/main/Android.gitignore
+
+# 构建文件
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Gradle 文件
+.gradle/
+build/
+
+# 本地配置文件
+local.properties
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+
+# 其他中间文件
+**/intermediates/
+**/outputs/

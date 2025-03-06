@@ -24,9 +24,12 @@
             android:theme="@style/Theme.Opencv">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".ui.theme.photo.ImageViewerActivity"
+            android:theme="@style/AppTheme.Transparent">
+
         </activity>
     </application>
 

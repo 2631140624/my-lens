@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">opencv</string>
+    <string name="smth_went_wrong">some thing error!!</string>
+    <string name="success">success</string>
+    <string name="click_to_start_scanning">点击开始扫描</string>
+    <string name="continue_to_add_pic">继续添加照片</string>
 </resources>

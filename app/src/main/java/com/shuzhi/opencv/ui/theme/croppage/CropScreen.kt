@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -32,17 +34,17 @@ fun CropScreen(
     viewModel: CropScreenViewModel,
     index: Int
 ){
-    Box(contentAlignment = Alignment.BottomCenter
-    , modifier = Modifier.background(Color.White)) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally
+    , modifier = Modifier.background(Color.Black).fillMaxWidth().fillMaxHeight().padding(3.dp)) {
         ComposeCropImageView(viewModel, appVm)
         Row (
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp, top = 20.dp)
         ){
             Text("取消", modifier = Modifier.clickable {
                 navController.popBackStack()
-            })
+            }, color = Color.White)
             Text("确定", modifier = Modifier.clickable {
                 //确定后加入队列
                 appVm.imageForCrop = viewModel.cropImageView?.crop()
@@ -56,7 +58,7 @@ fun CropScreen(
                     navController.popBackStack()
                     Toast.makeText(OpenCvApp.appContext,"添加成功 当前${appVm.imageCroped.size}张图片已经添加",Toast.LENGTH_SHORT).show()
                 }
-            })
+            },color = Color.White)
         }
     }
 }

@@ -6,7 +6,7 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.os.Environment
 import android.util.Log
-import com.shuzhi.opencv.ui.theme.util.showToast
+import com.shuzhi.opencv.ui.theme.util.showAndroidToast
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -54,11 +54,11 @@ object PdfManager {
 
             // 关闭 PdfDocument
             pdfDocument.close()
-            showToast("PDF文件已保存到: ${outputFile.absolutePath}")
+            showAndroidToast("PDF文件已保存到: ${outputFile.absolutePath}")
             Log.d("PDF", "PDF文件已保存到: ${outputFile.absolutePath}")
         } catch (e: IOException) {
             e.printStackTrace()
-            showToast("保存 PDF 失败: ${e.message}")
+            showAndroidToast("保存 PDF 失败: ${e.message}")
             Log.e("PDF", "保存 PDF 失败: ${e.message}")
         } finally {
             fileOutputStream?.close()

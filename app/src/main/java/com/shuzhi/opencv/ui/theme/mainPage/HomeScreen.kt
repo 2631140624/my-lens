@@ -3,7 +3,6 @@ package com.shuzhi.opencv.ui.theme.mainPage
 import androidx.camera.core.ImageCapture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -11,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import com.shuzhi.opencv.ui.theme.navgation.Screen
+import com.shuzhi.opencv.ui.theme.photo.PhotoManager.PickPhoto
 
 /**
  *@author :yinxiaolong
@@ -32,6 +32,10 @@ fun HomeScreen(
         },imageCapture)
 
         Row(horizontalArrangement = Arrangement.SpaceAround) {
+            PickPhoto(){
+                appVm.imageCroped.addAll(it)
+            }
+
             Button(onClick = {
                 onTakePhotoClick()
 //            navController.navigate(Screen.CropImagePage.route)

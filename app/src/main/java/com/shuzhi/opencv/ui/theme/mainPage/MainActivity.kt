@@ -8,6 +8,7 @@ import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -15,12 +16,16 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -28,27 +33,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.shuzhi.opencv.ui.theme.OpencvTheme
+import com.shuzhi.opencv.ui.theme.app.OpenCvApp
+import com.shuzhi.opencv.ui.theme.base.BaseActivity
+import com.shuzhi.opencv.ui.theme.drawer.DrawerScreen
 import com.shuzhi.opencv.ui.theme.navgation.AppNavgation
 import com.shuzhi.opencv.ui.theme.navgation.Screen
-import org.opencv.android.OpenCVLoader
-import org.opencv.android.Utils
-import org.opencv.core.Mat
-import org.opencv.core.MatOfPoint
-import org.opencv.core.MatOfPoint2f
-import org.opencv.core.Point
-import org.opencv.core.Size
-import org.opencv.imgproc.Imgproc
-import org.opencv.utils.Converters
+import com.shuzhi.opencv.ui.theme.util.ToastHost
+import com.shuzhi.opencv.ui.theme.util.provider.CompositionLocals
+import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+//import org.opencv.android.OpenCVLoader
+//import org.opencv.android.Utils
+//import org.opencv.core.Mat
+//import org.opencv.core.MatOfPoint
+//import org.opencv.core.MatOfPoint2f
+//import org.opencv.core.Point
+//import org.opencv.core.Size
+//import org.opencv.imgproc.Imgproc
+//import org.opencv.utils.Converters
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
-class MainActivity : ComponentActivity() {
+@AndroidEntryPoint
+class MainActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -78,6 +91,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        enableEdgeToEdge()
+        OpenCvApp.sharedViewModel = vm
         vm.isPermissionGranted = allPermissionsGranted()
         //        Log.d("Main","$isOpenCVLoaderInit")
 //
@@ -87,20 +102,29 @@ class MainActivity : ComponentActivity() {
 //        Imgproc.GaussianBlur(img, outimg, Size(311.0, 311.0), 0.0)
         setContent {
             OpencvTheme {
-                val navController = rememberAnimatedNavController()
-                AppNavgation(
-                    navController = navController,
-                    appVm = vm,
-                    imageCapture = imageCapture,
-                    onTakePhotoClickd = {
-                        takePictureForBitmap(this, imageCapture, onBitmapCaptured = {
-                            vm.imageForCrop =it
-                            navController.navigate(Screen.CropImagePage.route+"/-1")
-                        })
-                    },
+                DrawerScreen() {
+                    CompositionLocals {
+                        val navController = rememberAnimatedNavController()
+                        AppNavgation(
+                            navController = navController,
+                            appVm = vm,
+                            imageCapture = imageCapture,
+                            onTakePhotoClickd = {
+                                takePictureForBitmap(this, imageCapture, onBitmapCaptured = {
+                                    vm.imageForCrop = it
+                                    navController.navigate(Screen.CropImagePage.route + "/-1")
+                                })
+                            },
+                        )
+                        ToastHost()
 
-                )
+                    }
+                }
+
             }
+        }
+        if (!vm.isPermissionGranted){
+            requestPermissions(REQUIRED_PERMISSIONS,REQUEST_CODE_PERMISSIONS)
         }
     }
 
@@ -190,11 +214,12 @@ class MainActivity : ComponentActivity() {
 
         imageCapture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(imageProxy: ImageProxy) {
+
                 // 将 ImageProxy 转换为 Bitmap
                 val bitmap = imageProxy.toBitmap()
 
-                // 回调返回 Bitmap
-                onBitmapCaptured(bitmap.rotateBitmap(90))
+                // 回调返回 Bitmap 不同相机拍摄得到的bitmap 可能会有不同角度的旋转
+                onBitmapCaptured(bitmap.rotateBitmap(imageProxy.imageInfo.rotationDegrees))
 
                 // 关闭 ImageProxy
                 imageProxy.close()
@@ -235,44 +260,44 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@Composable
-fun MatImage(mat: Mat) {
+//@Composable
+//fun MatImage(mat: Mat) {
+//
+//    // 使用 Image 显示 Bitmap
+//    Image(
+//        painter = BitmapPainter(matToBitmap(mat).asImageBitmap()),
+//        contentDescription = "Processed Image",
+//        // modifier = Modifier.fillMaxSize()
+//    )
+//}
 
-    // 使用 Image 显示 Bitmap
-    Image(
-        painter = BitmapPainter(matToBitmap(mat).asImageBitmap()),
-        contentDescription = "Processed Image",
-        // modifier = Modifier.fillMaxSize()
-    )
-}
 
-
-fun matToBitmap(mat: Mat): Bitmap {
-    val bitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888)
-    Utils.matToBitmap(mat, bitmap)
-    return bitmap
-}
+//fun matToBitmap(mat: Mat): Bitmap {
+//    val bitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888)
+//    Utils.matToBitmap(mat, bitmap)
+//    return bitmap
+//}
 
 /**
  * 从 assets 加载图片并转换为 OpenCV 的 Mat 对象
  */
-private fun loadImageFromAssets(fileName: String, assetManager: AssetManager): Mat? {
-    return try {
-        // 从 assets 打开文件输入流
-        val inputStream = assetManager.open(fileName)
-
-        // 将输入流解码为 Bitmap
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-
-        // 转换 Bitmap 为 OpenCV 的 Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-        mat // 返回 Mat 对象
-    } catch (e: IOException) {
-        e.printStackTrace()
-        null // 返回 null 表示加载失败
-    }
-}
+//private fun loadImageFromAssets(fileName: String, assetManager: AssetManager): Mat? {
+//    return try {
+//        // 从 assets 打开文件输入流
+//        val inputStream = assetManager.open(fileName)
+//
+//        // 将输入流解码为 Bitmap
+//        val bitmap = BitmapFactory.decodeStream(inputStream)
+//
+//        // 转换 Bitmap 为 OpenCV 的 Mat
+//        val mat = Mat()
+//        Utils.bitmapToMat(bitmap, mat)
+//        mat // 返回 Mat 对象
+//    } catch (e: IOException) {
+//        e.printStackTrace()
+//        null // 返回 null 表示加载失败
+//    }
+//}
 
 
 @Composable
@@ -290,64 +315,64 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
-// 边缘检测与裁剪
-private fun detectAndCropDocument(src: Mat): Mat {
-    val gray = Mat()
-    val blurred = Mat()
-    val edges = Mat()
-
-    // 转灰度
-    Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY)
-
-    // 高斯模糊
-    Imgproc.GaussianBlur(gray, blurred, Size(5.0, 5.0), 0.0)
-
-    // 边缘检测
-    Imgproc.Canny(blurred, edges, 50.0, 150.0)
-
-    // 找轮廓
-    val contours: List<MatOfPoint> = ArrayList()
-    Imgproc.findContours(edges, contours, Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
-
-    // 按面积排序，取最大轮廓
-    contours.sortedByDescending { Imgproc.contourArea(it) }
-    val largestContour = contours.firstOrNull() ?: return src
-
-    // 近似多边形
-    val approxCurve = MatOfPoint2f()
-    val largestContour2f = MatOfPoint2f(*largestContour.toArray())
-    Imgproc.approxPolyDP(
-        largestContour2f,
-        approxCurve,
-        0.02 * Imgproc.arcLength(largestContour2f, true),
-        true
-    )
-
-    // 检查是否为四边形
-    if (approxCurve.total() != 4L) {
-        return src
-    }
-
-    // 获取四边形点
-    val points = approxCurve.toArray().toList()
-    val sortedPoints = sortPoints(points)
-
-    // 目标尺寸
-    val outputSize = Size(500.0, 700.0)
-    val dstPoints = listOf(
-        Point(0.0, 0.0),
-        Point(outputSize.width - 1, 0.0),
-        Point(outputSize.width - 1, outputSize.height - 1),
-        Point(0.0, outputSize.height - 1)
-    )
-
-    // 透视变换
-    val perspectiveTransform = Imgproc.getPerspectiveTransform(Converters.vector_Point2f_to_Mat(sortedPoints), Converters.vector_Point2f_to_Mat(dstPoints))
-    val cropped = Mat()
-    Imgproc.warpPerspective(src, cropped, perspectiveTransform, outputSize)
-
-    return cropped
-}
+//// 边缘检测与裁剪
+//private fun detectAndCropDocument(src: Mat): Mat {
+//    val gray = Mat()
+//    val blurred = Mat()
+//    val edges = Mat()
+//
+//    // 转灰度
+//    Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY)
+//
+//    // 高斯模糊
+//    Imgproc.GaussianBlur(gray, blurred, Size(5.0, 5.0), 0.0)
+//
+//    // 边缘检测
+//    Imgproc.Canny(blurred, edges, 50.0, 150.0)
+//
+//    // 找轮廓
+//    val contours: List<MatOfPoint> = ArrayList()
+//    Imgproc.findContours(edges, contours, Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
+//
+//    // 按面积排序，取最大轮廓
+//    contours.sortedByDescending { Imgproc.contourArea(it) }
+//    val largestContour = contours.firstOrNull() ?: return src
+//
+//    // 近似多边形
+//    val approxCurve = MatOfPoint2f()
+//    val largestContour2f = MatOfPoint2f(*largestContour.toArray())
+//    Imgproc.approxPolyDP(
+//        largestContour2f,
+//        approxCurve,
+//        0.02 * Imgproc.arcLength(largestContour2f, true),
+//        true
+//    )
+//
+//    // 检查是否为四边形
+//    if (approxCurve.total() != 4L) {
+//        return src
+//    }
+//
+//    // 获取四边形点
+//    val points = approxCurve.toArray().toList()
+//    val sortedPoints = sortPoints(points)
+//
+//    // 目标尺寸
+//    val outputSize = Size(500.0, 700.0)
+//    val dstPoints = listOf(
+//        Point(0.0, 0.0),
+//        Point(outputSize.width - 1, 0.0),
+//        Point(outputSize.width - 1, outputSize.height - 1),
+//        Point(0.0, outputSize.height - 1)
+//    )
+//
+//    // 透视变换
+//    val perspectiveTransform = Imgproc.getPerspectiveTransform(Converters.vector_Point2f_to_Mat(sortedPoints), Converters.vector_Point2f_to_Mat(dstPoints))
+//    val cropped = Mat()
+//    Imgproc.warpPerspective(src, cropped, perspectiveTransform, outputSize)
+//
+//    return cropped
+//}
 
 // 对点进行排序
 private fun sortPoints(points: List<Point>): List<Point> {

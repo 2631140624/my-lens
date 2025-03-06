@@ -51,6 +51,7 @@ import androidx.compose.ui.window.Dialog
 import com.shuzhi.opencv.R
 import com.shuzhi.opencv.ui.theme.app.OpenCvApp
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
+import com.shuzhi.opencv.ui.theme.photo.PhotoManager
 
 /**
  *@author :yinxiaolong
@@ -68,7 +69,7 @@ val toolMap = mutableMapOf<String, Int>().apply {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,onToolClicked:(String,Int)->Unit,onDelete:()->Unit,onGeneratePDF:(Int)->Unit) {
+fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,onToolClicked:(String,Int)->Unit,onDelete:()->Unit,onGeneratePDF:(Int)->Unit,toImagePreview:(Int)->Unit) {
 
     // 创建一个PagerState，控制ViewPager的状态
     val pagerState = rememberPagerState(pageCount = {
@@ -100,7 +101,9 @@ fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,o
             Image(
                 painter = BitmapPainter(bitmap.asImageBitmap()),
                 contentDescription = "Page $page",
-                modifier = Modifier.wrapContentSize().scale(imgScale)
+                modifier = Modifier.wrapContentSize().scale(imgScale).clickable {
+                    toImagePreview(pagerState.currentPage)
+                }
             )
         }
         FlowRow(modifier = Modifier.background(Color.White).fillMaxHeight()) {
