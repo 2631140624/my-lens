@@ -1,6 +1,7 @@
 package com.shuzhi.opencv.ui.theme.drawer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +31,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(), content: @Composable () -> Unit) {
+fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
+                 onGotoOcrPage: () -> Unit,
+                 content: @Composable () -> Unit,
+                 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -48,8 +52,11 @@ fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(), content: @Compos
             onDarkThemeChange = { darkThemeEnabled = it },
             notificationEnabled = notificationEnabled,
             onNotificationChange = { notificationEnabled = it },
-            googleMlkitDocumentScannerEnabled = googleMlkitDocumentScannerEnabled,
+            googleMlkitDocumentScannerEnabled = googleMlkitDocumentScannerEnabled?:false,
             onGoogleMlkitDocumentScannerChange = { viewModel.setGoogleMlkitDocumentScanner(it) },
+            onGotoOcrPage = {
+                onGotoOcrPage()
+                scope.launch { drawerState.close() } },
             onClose = { scope.launch { drawerState.close() } }
         )},
         content = {
@@ -68,6 +75,7 @@ fun DrawerContent(
     onNotificationChange: (Boolean) -> Unit,
     googleMlkitDocumentScannerEnabled: Boolean,
     onGoogleMlkitDocumentScannerChange: (Boolean) -> Unit,
+    onGotoOcrPage:()->Unit,
     onClose: () -> Unit
 ) {
     Column(Modifier.fillMaxWidth(0.8f).fillMaxHeight().background(Color.White).padding(16.dp)) {
@@ -116,6 +124,16 @@ fun DrawerContent(
                 checked = googleMlkitDocumentScannerEnabled,
                 onCheckedChange = onGoogleMlkitDocumentScannerChange
             )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {
+                // 跳转到 OCR 页面
+                onGotoOcrPage()
+            }
+        ) {
+            Text("OCR page")
+            Spacer(Modifier.weight(1f))
         }
 
         // 可以添加更多设置项...

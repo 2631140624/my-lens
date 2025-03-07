@@ -2,16 +2,28 @@ package com.shuzhi.opencv.ui.theme.navgation
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.window.BackEvent
+import androidx.activity.BackEventCompat
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.camera.core.ImageCapture
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +46,7 @@ import com.shuzhi.opencv.ui.theme.mainPage.HomeScreenViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.MainActivity
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.rotateBitmap
+import com.shuzhi.opencv.ui.theme.mlkit.ocr.OcrScreen
 import com.shuzhi.opencv.ui.theme.mlkit.scanner.DocumentScannerContent
 import com.shuzhi.opencv.ui.theme.mlkit.scanner.rememberDocumentScanner
 import com.shuzhi.opencv.ui.theme.pdf.PdfManager
@@ -43,6 +56,7 @@ import com.shuzhi.opencv.ui.theme.resortpage.DraggablePhotoGrid
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageScreen
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageViewModel
 import com.shuzhi.opencv.ui.theme.util.ToastHost
+import kotlinx.coroutines.launch
 
 
 /**
@@ -63,9 +77,54 @@ fun AppNavgation(
     onTakePhotoClickd:()->Unit
     //param for others
 ){
+//    val predictiveBackProgress = remember { Animatable(0f) }
+//
+//    val scope = rememberCoroutineScope()
+//    // 监听返回手势进度
+//    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val backCallback = remember {
+//        object : OnBackPressedCallback(true) {
+//            override fun handleOnBackStarted(backEvent: BackEventCompat) {
+//                scope.launch {
+//                    // 开始返回手势
+//                    predictiveBackProgress.snapTo(0f)
+//                }
+//            }
+//
+//            override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+//                scope.launch {
+//                    // 更新手势进度 (0f~1f)
+//                    predictiveBackProgress.snapTo(backEvent.progress)
+//                }
+//            }
+//
+//            override fun handleOnBackPressed() {
+//                // 完成返回操作
+//                navController.popBackStack()
+//                scope.launch {
+//                    predictiveBackProgress.animateTo(1f)
+//                }
+//            }
+//
+//            override fun handleOnBackCancelled() {
+//                // 取消返回
+//                scope.launch {
+//                    predictiveBackProgress.animateTo(0f)
+//                }
+//            }
+//        }
+//    }
+//
+//    LaunchedEffect(backDispatcher) {
+//        backDispatcher?.addCallback(backCallback)
+//    }
     AnimatedNavHost (
         navController = navController,
-        startDestination = Screen.Main.route
+        startDestination = Screen.Main.route,
+//        modifier = Modifier.graphicsLayer {
+//            translationX = predictiveBackProgress.value * 300 // 横向滑动效果
+//            alpha = 1f - predictiveBackProgress.value * 0.5f
+//        }
     ){
         composable(
             Screen.Main.route,
@@ -74,14 +133,27 @@ fun AppNavgation(
             }) {
             val  homeScreenViewModel : HomeScreenViewModel = viewModel()
             val  settingViewModel : SettingViewModel = hiltViewModel()
-            if (settingViewModel.googleMlkitDocumentScannerFlow.collectAsStateWithLifecycle().value) {
-                //如果开启了Mlkit文档扫描功能
-                DocumentScannerContent(appVm, onGotoDetail = {
-                    navController.navigate(Screen.SelectedImagePage.route)
-                })
-                return@composable
+            AnimatedContent(settingViewModel.googleMlkitDocumentScannerFlow.collectAsStateWithLifecycle().value ) { it ->
+                when(it){
+                    true ->{
+                        DocumentScannerContent(appVm, onGotoDetail = {
+                        navController.navigate(Screen.SelectedImagePage.route)
+                    })}
+                    false ->{
+                        HomeScreen(appVm,navController,imageCapture,onTakePhotoClickd,homeScreenViewModel)
+                    }
+                    null ->{
+                        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+                    }
+                }
+
             }
-            HomeScreen(appVm,navController,imageCapture,onTakePhotoClickd,homeScreenViewModel)
+//            if (settingViewModel.googleMlkitDocumentScannerFlow.collectAsStateWithLifecycle().value) {
+//                //如果开启了Mlkit文档扫描功能
+//
+//                return@composable
+//            }
+//            HomeScreen(appVm,navController,imageCapture,onTakePhotoClickd,homeScreenViewModel)
         }
         composable(
            "${Screen.CropImagePage.route}/{index}",
@@ -154,6 +226,9 @@ fun AppNavgation(
 
             }
         }
+        composable(Screen.OcrPage.route) {
+            OcrScreen()
+        }
 
     }
 
@@ -169,4 +244,5 @@ sealed class Screen(val route: String) {
     object ResortPage :Screen("ResortPage")
 
     object ImagePreview : Screen("image_preview")
+    object OcrPage :Screen("ocr_page")
 }

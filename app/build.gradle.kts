@@ -68,6 +68,7 @@ dependencies {
     implementation ("io.coil-kt:coil-compose:2.6.0")
     // Hilt 核心库
     implementation("com.google.dagger:hilt-android:2.55")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     kapt("com.google.dagger:hilt-android-compiler:2.55")
 
     // Hilt + Compose 支持

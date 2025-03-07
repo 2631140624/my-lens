@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -43,9 +44,12 @@ import com.shuzhi.opencv.ui.theme.base.BaseActivity
 import com.shuzhi.opencv.ui.theme.drawer.DrawerScreen
 import com.shuzhi.opencv.ui.theme.navgation.AppNavgation
 import com.shuzhi.opencv.ui.theme.navgation.Screen
+import com.shuzhi.opencv.ui.theme.util.LocalToastHostState
 import com.shuzhi.opencv.ui.theme.util.ToastHost
 import com.shuzhi.opencv.ui.theme.util.provider.CompositionLocals
+import com.shuzhi.opencv.ui.theme.util.showSuccessToast
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.io.File
 //import org.opencv.android.OpenCVLoader
 //import org.opencv.android.Utils
@@ -102,9 +106,21 @@ class MainActivity : BaseActivity() {
 //        Imgproc.GaussianBlur(img, outimg, Size(311.0, 311.0), 0.0)
         setContent {
             OpencvTheme {
-                DrawerScreen() {
-                    CompositionLocals {
-                        val navController = rememberAnimatedNavController()
+                CompositionLocals {
+                    val navController = rememberAnimatedNavController()
+                    val scope = rememberCoroutineScope()
+                    val localToastHostState = LocalToastHostState.current
+                    DrawerScreen(onGotoOcrPage = {
+                        //如果在ocr页面就不跳转了
+                        if (navController.currentDestination?.route == Screen.OcrPage.route) {
+                            Log.d("MainActivity", "already in ocr page")
+                            scope.launch {
+                                localToastHostState.showToast("already in ocr page")
+                            }
+                            return@DrawerScreen
+                        }
+                        navController.navigate(Screen.OcrPage.route)
+                    }) {
                         AppNavgation(
                             navController = navController,
                             appVm = vm,
@@ -117,7 +133,6 @@ class MainActivity : BaseActivity() {
                             },
                         )
                         ToastHost()
-
                     }
                 }
 

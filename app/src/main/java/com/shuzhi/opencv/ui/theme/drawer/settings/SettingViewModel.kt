@@ -19,7 +19,7 @@ class SettingViewModel @Inject constructor(
     var googleMlkitDocumentScannerFlow = repository.googleMlkitDocumentScannerFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000), // 防抖动
-        initialValue = false
+        initialValue = null
     )
 
     suspend fun setDarkMode(enabled: Boolean) {
