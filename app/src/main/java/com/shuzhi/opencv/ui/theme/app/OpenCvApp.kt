@@ -12,11 +12,16 @@ import me.pqpo.smartcropperlib.SmartCropper
  *@describe : com.shuzhi.opencv.ui.theme.app
  *@date :2025-01-18 21:43
  */
-@HiltAndroidApp
+//@HiltAndroidApp
 class OpenCvApp : Application() {
     companion object{
         var appContext :Context? = null
         var sharedViewModel : MainViewModel? =null
+        public fun doOnApp(context: Context){
+            appContext = context
+            //图像检测
+            SmartCropper.buildImageDetector(context)
+        }
     }
     override fun onCreate() {
         super.onCreate()
@@ -26,4 +31,5 @@ class OpenCvApp : Application() {
         //opencv
      //   val isOpenCVLoaderInit = OpenCVLoader.initLocal()
     }
+
 }

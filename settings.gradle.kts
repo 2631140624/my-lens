@@ -1,5 +1,8 @@
 import java.net.URI
 
+include(":myapplication")
+
+
 pluginManagement {
     repositories {
         google()
