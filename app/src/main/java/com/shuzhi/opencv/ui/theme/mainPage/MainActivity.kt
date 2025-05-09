@@ -90,7 +90,7 @@ class MainActivity : BaseActivity() {
     }
 
     val vm by viewModels<MainViewModel>()
-    lateinit var  processedImage :MutableState<Bitmap>
+    lateinit var processedImage: MutableState<Bitmap>
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,36 +110,49 @@ class MainActivity : BaseActivity() {
                     val navController = rememberAnimatedNavController()
                     val scope = rememberCoroutineScope()
                     val localToastHostState = LocalToastHostState.current
-                    DrawerScreen(onGotoOcrPage = {
-                        //如果在ocr页面就不跳转了
-                        if (navController.currentDestination?.route == Screen.OcrPage.route) {
-                            Log.d("MainActivity", "already in ocr page")
-                            scope.launch {
-                                localToastHostState.showToast("already in ocr page")
+                    DrawerScreen(
+                        onGotoPDFpreviewPage = {
+                            if (navController.currentDestination?.route == Screen.PdfPreviewPage.route) {
+                                Log.d("MainActivity", "already in ocr page")
+                                scope.launch {
+                                    localToastHostState.showToast("already in PDF Preview page")
+                                }
+                                return@DrawerScreen
                             }
-                            return@DrawerScreen
+                            navController.navigate(Screen.PdfPreviewPage.route)
+                        },
+                        onGotoOcrPage = {
+                            //如果在ocr页面就不跳转了
+                            if (navController.currentDestination?.route == Screen.OcrPage.route) {
+                                Log.d("MainActivity", "already in ocr page")
+                                scope.launch {
+                                    localToastHostState.showToast("already in ocr page")
+                                }
+                                return@DrawerScreen
+                            }
+                            navController.navigate(Screen.OcrPage.route)
+                        },
+                        content = {
+                            AppNavgation(
+                                navController = navController,
+                                appVm = vm,
+                                imageCapture = imageCapture,
+                                onTakePhotoClickd = {
+                                    takePictureForBitmap(this, imageCapture, onBitmapCaptured = {
+                                        vm.imageForCrop = it
+                                        navController.navigate(Screen.CropImagePage.route + "/-1")
+                                    })
+                                },
+                            )
+                            ToastHost()
                         }
-                        navController.navigate(Screen.OcrPage.route)
-                    }) {
-                        AppNavgation(
-                            navController = navController,
-                            appVm = vm,
-                            imageCapture = imageCapture,
-                            onTakePhotoClickd = {
-                                takePictureForBitmap(this, imageCapture, onBitmapCaptured = {
-                                    vm.imageForCrop = it
-                                    navController.navigate(Screen.CropImagePage.route + "/-1")
-                                })
-                            },
-                        )
-                        ToastHost()
-                    }
+                    ,gesturesEnabled = vm.isGestureEnable)
                 }
 
             }
         }
-        if (!vm.isPermissionGranted){
-            requestPermissions(REQUIRED_PERMISSIONS,REQUEST_CODE_PERMISSIONS)
+        if (!vm.isPermissionGranted) {
+            requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
     }
 
@@ -190,16 +203,18 @@ class MainActivity : BaseActivity() {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
             }
         }
 
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
+            .Builder(
+                contentResolver,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
+                contentValues
+            )
             .build()
 
         // Set up image capture listener, which is triggered after photo has
@@ -214,7 +229,7 @@ class MainActivity : BaseActivity() {
                 }
 
                 override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
+                        onImageSaved(output: ImageCapture.OutputFileResults) {
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
@@ -224,7 +239,11 @@ class MainActivity : BaseActivity() {
     }
 
 
-    fun takePictureForBitmap(context: Context, imageCapture: ImageCapture, onBitmapCaptured: (Bitmap) -> Unit) {
+    fun takePictureForBitmap(
+        context: Context,
+        imageCapture: ImageCapture,
+        onBitmapCaptured: (Bitmap) -> Unit
+    ) {
         val executor = ContextCompat.getMainExecutor(context)
 
         imageCapture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {

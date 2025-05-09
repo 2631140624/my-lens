@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
  *@date :2025-01-16 19:38
  */
 class MainViewModel : ViewModel() {
+    var isGestureEnable  by mutableStateOf(true)
     var isPermissionGranted  by mutableStateOf(false)
     var imageForCrop :Bitmap ? = null
     val imageCroped : SnapshotStateList<Bitmap> = mutableStateListOf()

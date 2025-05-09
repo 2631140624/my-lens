@@ -17,6 +17,8 @@ class OpenCvApp : Application() {
     companion object{
         var appContext :Context? = null
         var sharedViewModel : MainViewModel? =null
+
+        //sdk启动前核心加载 在其他模块调用
         public fun doOnApp(context: Context){
             appContext = context
             //图像检测

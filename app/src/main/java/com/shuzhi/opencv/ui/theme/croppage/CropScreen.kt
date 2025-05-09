@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,13 +35,27 @@ fun CropScreen(
     viewModel: CropScreenViewModel,
     index: Int
 ){
+    DisposableEffect(Unit) {
+        println("CropScreen ON DisposableEffect")
+        appVm.isGestureEnable = false
+        onDispose {
+            println("CropScreen onDispose")
+            appVm.isGestureEnable = true
+        }
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally
-    , modifier = Modifier.background(Color.Black).fillMaxWidth().fillMaxHeight().padding(3.dp)) {
+    , modifier = Modifier
+            .background(Color.Black)
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(3.dp)) {
         ComposeCropImageView(viewModel, appVm)
         Row (
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp, top = 20.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp, top = 20.dp)
         ){
             Text("取消", modifier = Modifier.clickable {
                 navController.popBackStack()

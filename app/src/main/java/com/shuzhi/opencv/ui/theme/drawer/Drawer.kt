@@ -33,7 +33,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
                  onGotoOcrPage: () -> Unit,
+                 onGotoPDFpreviewPage: () -> Unit,
                  content: @Composable () -> Unit,
+                 gesturesEnabled: Boolean = true
                  ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -45,6 +47,7 @@ fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
     val googleMlkitDocumentScannerEnabled by viewModel.googleMlkitDocumentScannerFlow.collectAsState()
 
     ModalNavigationDrawer(
+        gesturesEnabled = gesturesEnabled,
         drawerState = drawerState,
         drawerContent = {
             DrawerContent(
@@ -57,6 +60,10 @@ fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
             onGotoOcrPage = {
                 onGotoOcrPage()
                 scope.launch { drawerState.close() } },
+            onGotoPDFpreviewPage = {
+                onGotoPDFpreviewPage()
+                scope.launch { drawerState.close() }
+            },
             onClose = { scope.launch { drawerState.close() } }
         )},
         content = {
@@ -76,6 +83,7 @@ fun DrawerContent(
     googleMlkitDocumentScannerEnabled: Boolean,
     onGoogleMlkitDocumentScannerChange: (Boolean) -> Unit,
     onGotoOcrPage:()->Unit,
+    onGotoPDFpreviewPage:()->Unit,
     onClose: () -> Unit
 ) {
     Column(Modifier.fillMaxWidth(0.8f).fillMaxHeight().background(Color.White).padding(16.dp)) {
@@ -90,30 +98,30 @@ fun DrawerContent(
         Spacer(Modifier.height(24.dp))
 
         // 暗黑模式开关
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("暗黑模式")
-            Spacer(Modifier.weight(1f))
-            Switch(
-                checked = darkThemeEnabled,
-                onCheckedChange = onDarkThemeChange
-            )
-        }
-
-        // 通知开关
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("接收通知")
-            Spacer(Modifier.weight(1f))
-            Switch(
-                checked = notificationEnabled,
-                onCheckedChange = onNotificationChange
-            )
-        }
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier.fillMaxWidth()
+//        ) {
+//            Text("暗黑模式")
+//            Spacer(Modifier.weight(1f))
+//            Switch(
+//                checked = darkThemeEnabled,
+//                onCheckedChange = onDarkThemeChange
+//            )
+//        }
+//
+//        // 通知开关
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier.fillMaxWidth()
+//        ) {
+//            Text("接收通知")
+//            Spacer(Modifier.weight(1f))
+//            Switch(
+//                checked = notificationEnabled,
+//                onCheckedChange = onNotificationChange
+//            )
+//        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -133,6 +141,16 @@ fun DrawerContent(
             }
         ) {
             Text("OCR page")
+            Spacer(Modifier.weight(1f))
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {
+                // 跳转到 OCR 页面
+                onGotoPDFpreviewPage()
+            }
+        ) {
+            Text("PDF Preview")
             Spacer(Modifier.weight(1f))
         }
 

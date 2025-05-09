@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -70,6 +72,24 @@ import com.google.mlkit.vision.text.Text
 import com.shuzhi.opencv.R
 import com.shuzhi.opencv.ui.theme.util.UiState
 
+
+
+@Composable
+fun OCrScreenWithScaffold() {
+
+    Scaffold(
+        topBar = {
+            Row(modifier = Modifier.fillMaxWidth()) {
+            Text("OCR 文本识别", modifier = Modifier.padding(16.dp).align(Alignment.CenterVertically))
+        }
+        },
+        content = {paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                OcrScreen()
+            }
+        },
+    )
+}
 @Composable
 fun OcrScreen(
     viewModel: OcrViewModel = hiltViewModel()

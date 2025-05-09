@@ -4,13 +4,19 @@ import androidx.camera.core.ImageCapture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
 import com.shuzhi.opencv.ui.theme.navgation.Screen
 import com.shuzhi.opencv.ui.theme.photo.PhotoManager.PickPhoto
+import com.shuzhi.opencv.ui.theme.util.LocalToastHostState
+import kotlinx.coroutines.launch
 
 /**
  *@author :yinxiaolong
@@ -25,6 +31,8 @@ fun HomeScreen(
     onTakePhotoClick: () -> Unit,
     homeScreenViewModel: HomeScreenViewModel
 ) {
+    val toastHostState = LocalToastHostState.current
+    val scope = rememberCoroutineScope()
     Box(contentAlignment = Alignment.BottomCenter){
         Text(text = "Home Screen")
         CameraPreview({
@@ -40,13 +48,23 @@ fun HomeScreen(
                 onTakePhotoClick()
 //            navController.navigate(Screen.CropImagePage.route)
             }) {
-                Text("take photo and Go to Crop page")
+                Text("take photo")
             }
             Button(onClick = {
-                navController.navigate(Screen.SelectedImagePage.route)
+                if (appVm.imageCroped.isNotEmpty()) {
+                    navController.navigate(Screen.SelectedImagePage.route)
+                }else{
+                    scope.launch {
+                        toastHostState.showToast(message = "请先选择或拍摄图片")
+                    }
+                }
                 //todo goto 已选择的图片页面
             }) {
-                Text("${appVm.imageCroped.size}")
+                Row {
+                    Text("${appVm.imageCroped.size}")
+                    Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null)
+                }
+
             }
         }
     }

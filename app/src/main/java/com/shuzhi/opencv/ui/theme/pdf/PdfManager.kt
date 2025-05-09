@@ -17,9 +17,8 @@ import java.io.IOException
  *@date :2025-01-20 14:54
  */
 object PdfManager {
-    fun saveBitmapsAsPdf(bitmaps: List<Bitmap>, outputFileName: String) {
+    fun saveBitmapsAsPdf(bitmaps: List<Bitmap>, outputFileName: String,documentsDir:File) :File?{
         // 获取 Documents 目录路径
-        val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
         val appFolder = File(documentsDir,"dragonLens")
         if (!appFolder.exists()) {
             appFolder.mkdirs()  // 确保目录存在
@@ -54,14 +53,16 @@ object PdfManager {
 
             // 关闭 PdfDocument
             pdfDocument.close()
-            showAndroidToast("PDF文件已保存到: ${outputFile.absolutePath}")
+           // showAndroidToast("PDF文件已保存到: ${outputFile.absolutePath}")
             Log.d("PDF", "PDF文件已保存到: ${outputFile.absolutePath}")
         } catch (e: IOException) {
             e.printStackTrace()
-            showAndroidToast("保存 PDF 失败: ${e.message}")
+            return null
+           // showAndroidToast("保存 PDF 失败: ${e.message}")
             Log.e("PDF", "保存 PDF 失败: ${e.message}")
         } finally {
             fileOutputStream?.close()
         }
+        return outputFile
     }
 }

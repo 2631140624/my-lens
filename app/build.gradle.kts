@@ -70,6 +70,7 @@ dependencies {
     // Hilt 核心库
     implementation("com.google.dagger:hilt-android:2.55")
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    implementation("androidx.compose.animation:animation-core-lint:1.8.0")
     kapt("com.google.dagger:hilt-android-compiler:2.55")
 
     // Hilt + Compose 支持

@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -46,10 +48,14 @@ import com.shuzhi.opencv.ui.theme.mainPage.HomeScreenViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.MainActivity
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
 import com.shuzhi.opencv.ui.theme.mainPage.rotateBitmap
+import com.shuzhi.opencv.ui.theme.mlkit.ocr.OCrScreenWithScaffold
 import com.shuzhi.opencv.ui.theme.mlkit.ocr.OcrScreen
 import com.shuzhi.opencv.ui.theme.mlkit.scanner.DocumentScannerContent
 import com.shuzhi.opencv.ui.theme.mlkit.scanner.rememberDocumentScanner
+import com.shuzhi.opencv.ui.theme.pdf.ExportScreen
+import com.shuzhi.opencv.ui.theme.pdf.ExportViewModel
 import com.shuzhi.opencv.ui.theme.pdf.PdfManager
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.ui.PreviewScreen
 import com.shuzhi.opencv.ui.theme.photo.ImageViewerActivity
 import com.shuzhi.opencv.ui.theme.photo.PhotoManager.ImageViewer
 import com.shuzhi.opencv.ui.theme.resortpage.DraggablePhotoGrid
@@ -131,8 +137,10 @@ fun AppNavgation(
             exitTransition = {
                 slideOutVertically()
             }) {
+
             val  homeScreenViewModel : HomeScreenViewModel = viewModel()
             val  settingViewModel : SettingViewModel = hiltViewModel()
+
             AnimatedContent(settingViewModel.googleMlkitDocumentScannerFlow.collectAsStateWithLifecycle().value ) { it ->
                 when(it){
                     true ->{
@@ -144,6 +152,12 @@ fun AppNavgation(
                     }
                     null ->{
                         CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+                    }
+                }
+                DisposableEffect(Unit) {
+                    appVm.isGestureEnable = true
+                    onDispose {
+                       // appVm.isGestureEnable = false
                     }
                 }
 
@@ -198,7 +212,8 @@ fun AppNavgation(
             }, onDelete = {
 
             }, onGeneratePDF = {
-                PdfManager.saveBitmapsAsPdf(appVm.imageCroped,"xiaolong")
+                navController.navigate(Screen.ExportPage.route)
+               // PdfManager.saveBitmapsAsPdf(appVm.imageCroped,"xiaolong",)
             }, toImagePreview = {
                 BaseActivity.currentActivity.get()!!.startActivity(Intent(BaseActivity.currentActivity.get(),ImageViewerActivity::class.java).apply {
                     putExtra("index",it)
@@ -227,7 +242,14 @@ fun AppNavgation(
             }
         }
         composable(Screen.OcrPage.route) {
-            OcrScreen()
+            OCrScreenWithScaffold()
+        }
+        composable(Screen.ExportPage.route) {
+            val  vm :ExportViewModel = viewModel()
+            ExportScreen(vm)
+        }
+        composable (Screen.PdfPreviewPage.route){
+            PreviewScreen()
         }
 
     }
@@ -245,4 +267,6 @@ sealed class Screen(val route: String) {
 
     object ImagePreview : Screen("image_preview")
     object OcrPage :Screen("ocr_page")
+    object ExportPage :Screen("export_page")
+    object PdfPreviewPage : Screen("PDFPreviewPage")
 }
