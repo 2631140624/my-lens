@@ -12,8 +12,8 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    // 从local.properties读取github用户名及personal access token (classic)
-    val propsFile = File(rootProject.projectDir.path + "/local.properties")
+    // gradle.properties读取github用户名及personal access token (classic)
+    val propsFile = File(rootProject.projectDir.path + "/gradle.properties")
     val properties = java.util.Properties()
     properties.load(propsFile.inputStream())
     // 设置到extra，会先于buildSrc执行，但是这里设置的extra没办法在project/module的gradle里面用。。。。

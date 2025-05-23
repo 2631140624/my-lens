@@ -135,7 +135,8 @@ publishing{
             // 配置信息，使用: classpath("groupId:artifactId:version") (不能有空格)
             groupId = "com.shuzhi.opencv"
             artifactId = "document"
-            version = "v0.0.2"
+            //每次有新功能重新打包需要增加版本号
+            version = "v0.0.3"
             // 这条要加上，不然不会包含代码文件
             afterEvaluate {
                 from(components["release"])

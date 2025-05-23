@@ -58,8 +58,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation(project(":app"))
-    //implementation("com.shuzhi.opencv:document:v0.0.2")
+   // implementation(project(":app"))
+    //app 打包之后的依赖
+    implementation("com.shuzhi.opencv:document:v0.0.3")
 
     kapt("com.google.dagger:hilt-android-compiler:2.55")
 
