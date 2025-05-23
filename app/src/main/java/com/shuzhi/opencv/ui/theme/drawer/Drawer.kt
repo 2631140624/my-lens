@@ -25,18 +25,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import cn.leancloud.LCUser
+import cn.leancloud.LeanCloud
+import com.shuzhi.opencv.ui.theme.app.OpenCvApp
 import com.shuzhi.opencv.ui.theme.drawer.settings.SettingViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
-                 onGotoOcrPage: () -> Unit,
-                 onGotoPDFpreviewPage: () -> Unit,
-                 content: @Composable () -> Unit,
-                 gesturesEnabled: Boolean = true
-                 ) {
+fun DrawerScreen(
+    viewModel: SettingViewModel = hiltViewModel(),
+    onGotoOcrPage: () -> Unit,
+    onGotoPDFpreviewPage: () -> Unit,
+    onGotoCloudPDFpreviewPage: () -> Unit,
+    content: @Composable () -> Unit,
+    gesturesEnabled: Boolean = true
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -51,21 +56,27 @@ fun DrawerScreen(viewModel :SettingViewModel = hiltViewModel(),
         drawerState = drawerState,
         drawerContent = {
             DrawerContent(
-            darkThemeEnabled = darkThemeEnabled,
-            onDarkThemeChange = { darkThemeEnabled = it },
-            notificationEnabled = notificationEnabled,
-            onNotificationChange = { notificationEnabled = it },
-            googleMlkitDocumentScannerEnabled = googleMlkitDocumentScannerEnabled?:false,
-            onGoogleMlkitDocumentScannerChange = { viewModel.setGoogleMlkitDocumentScanner(it) },
-            onGotoOcrPage = {
-                onGotoOcrPage()
-                scope.launch { drawerState.close() } },
-            onGotoPDFpreviewPage = {
-                onGotoPDFpreviewPage()
-                scope.launch { drawerState.close() }
-            },
-            onClose = { scope.launch { drawerState.close() } }
-        )},
+                darkThemeEnabled = darkThemeEnabled,
+                onDarkThemeChange = { darkThemeEnabled = it },
+                notificationEnabled = notificationEnabled,
+                onNotificationChange = { notificationEnabled = it },
+                googleMlkitDocumentScannerEnabled = googleMlkitDocumentScannerEnabled ?: false,
+                onGoogleMlkitDocumentScannerChange = { viewModel.setGoogleMlkitDocumentScanner(it) },
+                onGotoOcrPage = {
+                    onGotoOcrPage()
+                    scope.launch { drawerState.close() }
+                },
+                onGotoPDFpreviewPage = {
+                    onGotoPDFpreviewPage()
+                    scope.launch { drawerState.close() }
+                }, onGotoCloudPDFpreviewPage = {
+                    onGotoCloudPDFpreviewPage()
+                    // 跳转到云端PDF预览页面
+                    scope.launch { drawerState.close() }
+                },
+                onClose = { scope.launch { drawerState.close() } }
+            )
+        },
         content = {
             content()
         }
@@ -82,11 +93,16 @@ fun DrawerContent(
     onNotificationChange: (Boolean) -> Unit,
     googleMlkitDocumentScannerEnabled: Boolean,
     onGoogleMlkitDocumentScannerChange: (Boolean) -> Unit,
-    onGotoOcrPage:()->Unit,
-    onGotoPDFpreviewPage:()->Unit,
+    onGotoOcrPage: () -> Unit,
+    onGotoPDFpreviewPage: () -> Unit,
+    onGotoCloudPDFpreviewPage: () -> Unit,
     onClose: () -> Unit
 ) {
-    Column(Modifier.fillMaxWidth(0.8f).fillMaxHeight().background(Color.White).padding(16.dp)) {
+    Column(Modifier
+        .fillMaxWidth(0.8f)
+        .fillMaxHeight()
+        .background(Color.White)
+        .padding(16.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text("设置", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
@@ -98,17 +114,17 @@ fun DrawerContent(
         Spacer(Modifier.height(24.dp))
 
         // 暗黑模式开关
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text("暗黑模式")
-//            Spacer(Modifier.weight(1f))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("userName: ${OpenCvApp.sharedViewModel!!.userName}")
+            Spacer(Modifier.weight(1f))
 //            Switch(
 //                checked = darkThemeEnabled,
 //                onCheckedChange = onDarkThemeChange
 //            )
-//        }
+        }
 //
 //        // 通知开关
 //        Row(
@@ -135,22 +151,39 @@ fun DrawerContent(
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clickable {
-                // 跳转到 OCR 页面
-                onGotoOcrPage()
-            }
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // 跳转到 OCR 页面
+                    onGotoOcrPage()
+                }
         ) {
             Text("OCR page")
             Spacer(Modifier.weight(1f))
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clickable {
-                // 跳转到 OCR 页面
-                onGotoPDFpreviewPage()
-            }
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // 跳转到 OCR 页面
+                    onGotoPDFpreviewPage()
+                }
         ) {
-            Text("PDF Preview")
+            Text("本地PDF Preview")
+            Spacer(Modifier.weight(1f))
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // 跳转到 OCR 页面
+                    onGotoCloudPDFpreviewPage()
+                }
+        ) {
+            Text("云端PDF Preview")
             Spacer(Modifier.weight(1f))
         }
 

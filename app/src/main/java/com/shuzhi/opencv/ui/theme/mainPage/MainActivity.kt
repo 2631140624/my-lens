@@ -111,6 +111,16 @@ class MainActivity : BaseActivity() {
                     val scope = rememberCoroutineScope()
                     val localToastHostState = LocalToastHostState.current
                     DrawerScreen(
+                        onGotoCloudPDFpreviewPage = {
+                            if (navController.currentDestination?.route == Screen.PdfPreviewPage.route) {
+                                Log.d("MainActivity", "already in ocr page")
+                                scope.launch {
+                                    localToastHostState.showToast("already in PDF Preview page")
+                                }
+                                return@DrawerScreen
+                            }
+                            navController.navigate(Screen.PdfPreviewPage.route+"/1")
+                        },
                         onGotoPDFpreviewPage = {
                             if (navController.currentDestination?.route == Screen.PdfPreviewPage.route) {
                                 Log.d("MainActivity", "already in ocr page")
@@ -119,7 +129,7 @@ class MainActivity : BaseActivity() {
                                 }
                                 return@DrawerScreen
                             }
-                            navController.navigate(Screen.PdfPreviewPage.route)
+                            navController.navigate(Screen.PdfPreviewPage.route+"/0")
                         },
                         onGotoOcrPage = {
                             //如果在ocr页面就不跳转了
@@ -130,7 +140,7 @@ class MainActivity : BaseActivity() {
                                 }
                                 return@DrawerScreen
                             }
-                            navController.navigate(Screen.OcrPage.route)
+                            navController.navigate("${Screen.OcrPage.route}/-1")
                         },
                         content = {
                             AppNavgation(

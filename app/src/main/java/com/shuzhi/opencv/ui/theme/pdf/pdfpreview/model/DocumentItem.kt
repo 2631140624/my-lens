@@ -7,5 +7,6 @@ data class DocumentItem(
     val uri: Uri,
     val fileName: String,
     val timestamp: Long,
-    val thumbnail: Bitmap? = null
+    val thumbnail: Bitmap? = null,
+    val thumbnailUri: String? = null
 )

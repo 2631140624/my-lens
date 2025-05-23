@@ -1,5 +1,6 @@
 package com.shuzhi.opencv.ui.theme.selectedpage
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,5 +13,5 @@ import androidx.lifecycle.ViewModel
  */
 class SelectedImageViewModel : ViewModel(){
     var showDeleteDialog  by mutableStateOf(false)
-
+    var showFilterBottomSheet by mutableStateOf(false)
 }

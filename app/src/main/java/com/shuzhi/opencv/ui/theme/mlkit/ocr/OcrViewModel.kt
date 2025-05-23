@@ -3,7 +3,9 @@ package com.shuzhi.opencv.ui.theme.mlkit.ocr
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +25,8 @@ class OcrViewModel @Inject constructor(
 
     private val _ocrState = mutableStateOf<UiState<Text>>(UiState.Idle)
     val ocrState: State<UiState<Text>> = _ocrState
+
+    var bitmapFromLastPage by mutableStateOf<Bitmap?>(null)
 
     val boxes = mutableListOf<BoundingBoxInfo>()
     fun processImage(bitmap: Bitmap) {
@@ -114,6 +118,6 @@ fun android.graphics.Rect.toComposeRect(): Rect {
 
 data class BoundingBoxInfo(
     val rect: Rect,
-    val text: String,  // 新增文本字段
-    val type: String // "block", "line" 或 "element" 用于区分层级
+    val text: String,   // 新增文本字段
+    val type: String    // "block", "line" 或 "element" 用于区分层级
 )

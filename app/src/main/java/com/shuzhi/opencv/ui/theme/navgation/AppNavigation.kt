@@ -2,6 +2,8 @@ package com.shuzhi.opencv.ui.theme.navgation
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.util.Log
+import android.widget.Toast
 import android.window.BackEvent
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
@@ -34,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import cn.leancloud.LCUser
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.shuzhi.opencv.ui.theme.app.OpenCvApp
@@ -42,6 +45,10 @@ import com.shuzhi.opencv.ui.theme.croppage.CropScreen
 import com.shuzhi.opencv.ui.theme.croppage.CropScreenViewModel
 import com.shuzhi.opencv.ui.theme.drawer.DrawerScreen
 import com.shuzhi.opencv.ui.theme.drawer.settings.SettingViewModel
+import com.shuzhi.opencv.ui.theme.filter.FilterScreen
+import com.shuzhi.opencv.ui.theme.filter.FilterViewModel
+import com.shuzhi.opencv.ui.theme.login.LoginScreen
+import com.shuzhi.opencv.ui.theme.login.RegisterScreen
 
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreen
 import com.shuzhi.opencv.ui.theme.mainPage.HomeScreenViewModel
@@ -62,6 +69,7 @@ import com.shuzhi.opencv.ui.theme.resortpage.DraggablePhotoGrid
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageScreen
 import com.shuzhi.opencv.ui.theme.selectedpage.SelectedImageViewModel
 import com.shuzhi.opencv.ui.theme.util.ToastHost
+import com.shuzhi.opencv.ui.theme.util.ToastHostState
 import kotlinx.coroutines.launch
 
 
@@ -126,7 +134,7 @@ fun AppNavgation(
 //    }
     AnimatedNavHost (
         navController = navController,
-        startDestination = Screen.Main.route,
+        startDestination = Screen.LoginPage.route,
 //        modifier = Modifier.graphicsLayer {
 //            translationX = predictiveBackProgress.value * 300 // 横向滑动效果
 //            alpha = 1f - predictiveBackProgress.value * 0.5f
@@ -191,7 +199,9 @@ fun AppNavgation(
                     "添加" ->{
                         navController.popBackStack()
                     }
-                    "筛选器" ->{
+                    "滤镜" ->{
+                        navController.navigate(Screen.FilterPage.route)
+                       // vm.showFilterBottomSheet = true
                        // appVm.imageCroped[index] = OpencvFilter.filter1(appVm.imageCroped[index], Imgproc.COLORMAP_AUTUMN)
                     }
                     "裁切" ->{
@@ -205,7 +215,9 @@ fun AppNavgation(
                     }
                     "删除" ->{
                         vm.showDeleteDialog = true
-
+                    }
+                    "ocr" ->{
+                        navController.navigate("${Screen.OcrPage.route}/$index")
                     }
 
                 }
@@ -241,15 +253,58 @@ fun AppNavgation(
 
             }
         }
-        composable(Screen.OcrPage.route) {
-            OCrScreenWithScaffold()
+        composable(
+            "${Screen.OcrPage.route}/{index}",
+            arguments = listOf(navArgument("index") { type = NavType.IntType })
+        ) {
+            val index = it.arguments?.getInt("index") ?: -1
+            OCrScreenWithScaffold(index)
         }
         composable(Screen.ExportPage.route) {
             val  vm :ExportViewModel = viewModel()
             ExportScreen(vm)
         }
-        composable (Screen.PdfPreviewPage.route){
-            PreviewScreen()
+        composable ("${Screen.PdfPreviewPage.route}/{index}",
+            arguments = listOf(navArgument("index") { type = NavType.IntType })
+        ){
+            // 0 :本地 1：cloud
+            val index = it.arguments?.getInt("index") ?: 0
+            PreviewScreen(index)
+        }
+
+        composable(Screen.FilterPage.route){
+            val vm : FilterViewModel = viewModel()
+            FilterScreen(vm)
+        }
+        composable(Screen.LoginPage.route){
+            LoginScreen(onRegisterClick = {
+                navController.navigate(Screen.RegisterPage.route){
+                    popUpTo(Screen.RegisterPage.route){
+                        inclusive = true
+                    }
+                }
+            }, onLoginSuccess = {
+                navController.navigate(Screen.Main.route){
+                    popUpTo(Screen.LoginPage.route){
+                        inclusive = true
+                    }
+                }
+            })
+        }
+        composable(Screen.RegisterPage.route){
+            RegisterScreen(onNavigateToLogin = {
+                navController.navigate(Screen.LoginPage.route){
+                    popUpTo(Screen.LoginPage.route){
+                        inclusive = true
+                    }
+                }
+            }, onLoginSuccess = {
+                navController.navigate(Screen.LoginPage.route){
+                    popUpTo(Screen.LoginPage.route){
+                        inclusive = true
+                    }
+                }
+            })
         }
 
     }
@@ -269,4 +324,7 @@ sealed class Screen(val route: String) {
     object OcrPage :Screen("ocr_page")
     object ExportPage :Screen("export_page")
     object PdfPreviewPage : Screen("PDFPreviewPage")
+    object FilterPage : Screen("filter_page")
+    object LoginPage :Screen("login_screen")
+    object RegisterPage :Screen("register_screen")
 }

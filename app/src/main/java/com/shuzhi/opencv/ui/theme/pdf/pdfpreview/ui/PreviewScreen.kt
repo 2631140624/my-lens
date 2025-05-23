@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.DocumentItem
 import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.viewmodel.DocumentViewModel
 import java.text.SimpleDateFormat
@@ -56,16 +58,24 @@ import java.util.Locale
 // presentation/screen/PreviewScreen.kt
 @Composable
 fun PreviewScreen(
+    index: Int,
     modifier: Modifier = Modifier,
     viewModel: DocumentViewModel = hiltViewModel(),
 ) {
+
+
+    LaunchedEffect(Unit) {
+        viewModel.loadDocuments(isRemote = index == 1)
+    }
     val documents by viewModel.documents.collectAsState()
     val selectedDocument by viewModel.selectedDocument.collectAsState()
     val isLoading by viewModel.loadingState.collectAsState()
     val context = LocalContext.current
 
+
     Box(modifier = modifier.fillMaxSize()) {
         DocumentGrid(
+            index = index,
             documents = documents,
             onDocumentSelected = viewModel::selectDocument,
             isLoading = isLoading
@@ -84,6 +94,7 @@ fun PreviewScreen(
 
 @Composable
 private fun DocumentGrid(
+    index: Int,
     documents: List<DocumentItem>,
     onDocumentSelected: (DocumentItem) -> Unit,
     isLoading: Boolean
@@ -91,27 +102,42 @@ private fun DocumentGrid(
     Scaffold(
         topBar = {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text("本地PDF预览", modifier = Modifier.padding(16.dp).align(Alignment.CenterVertically))
-            }
-    }, content = { padding ->
-        if (isLoading) {
-            CircularProgressIndicator(Modifier.fillMaxSize())
-            return@Scaffold
-        }
-
-        LazyVerticalStaggeredGrid(
-            modifier = Modifier.padding(padding),
-            columns = StaggeredGridCells.Fixed(2),
-            contentPadding = PaddingValues(8.dp)
-        ) {
-            items(documents) { doc ->
-                DocumentCard(
-                    document = doc,
-                    onCardClick = { onDocumentSelected(doc) }
+                Text(
+                    if (index==0)"本地PDF预览" else "云端PDF预览",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.CenterVertically)
                 )
             }
-        }
-    })
+        }, content = { padding ->
+            if (isLoading) {
+                CircularProgressIndicator(Modifier.fillMaxSize())
+                return@Scaffold
+            }
+            if (documents.isEmpty()) {
+                Spacer(Modifier.height(36.dp))
+                Text(
+                    text = "没有可预览的PDF文件，请先添加文件",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier.padding(padding),
+                columns = StaggeredGridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(documents) { doc ->
+                    DocumentCard(
+                        document = doc,
+                        onCardClick = { onDocumentSelected(doc) }
+                    )
+                }
+            }
+        })
 
 }
 
@@ -128,8 +154,8 @@ private fun DocumentCard(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
-            AsyncThumbnail(bitmap = document.thumbnail)
-            
+            AsyncThumbnail(bitmap = document.thumbnail, imageUrl = document.thumbnailUri)
+
             Text(
                 text = document.fileName,
                 style = MaterialTheme.typography.titleSmall,
@@ -137,7 +163,7 @@ private fun DocumentCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Text(
                 text = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
                     .format(document.timestamp),
@@ -150,17 +176,29 @@ private fun DocumentCard(
 }
 
 @Composable
-private fun AsyncThumbnail(bitmap: Bitmap?) {
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .clip(MaterialTheme.shapes.medium),
-            contentScale = ContentScale.Crop
-        )
+private fun AsyncThumbnail(bitmap: Bitmap?, imageUrl: String? = null) {
+    if (bitmap != null || imageUrl != null) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop
+            )
+        }
     } else {
         Box(
             modifier = Modifier
@@ -187,7 +225,7 @@ private fun ActionBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -201,9 +239,9 @@ private fun ActionBottomSheet(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(Modifier.height(16.dp))
-            
+
             ActionButton(
                 icon = Icons.Default.Done,
                 text = "打开文件",
@@ -219,9 +257,9 @@ private fun ActionBottomSheet(
 //                text = "编辑信息",
 //                onClick = { /* TODO */ }
 //            )
-            
+
             Spacer(Modifier.height(24.dp))
-            
+
             OutlinedButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -233,7 +271,7 @@ private fun ActionBottomSheet(
 }
 
 @Composable
-private fun ActionButton(
+fun ActionButton(
     icon: ImageVector,
     text: String,
     onClick: () -> Unit

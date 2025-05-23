@@ -14,8 +14,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -27,13 +31,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.leancloud.LCFile
+import cn.leancloud.LCUser
 import com.shuzhi.opencv.ui.theme.app.OpenCvApp
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord.Companion.DATE
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord.Companion.PDF_Preview_Image
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord.Companion.PDF_URL
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord.Companion.USER_ID
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.PdfRecord.Companion.NAME
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.repository.DocumentRepositoryImpl
 import com.shuzhi.opencv.ui.theme.util.LocalToastHostState
 import com.shuzhi.opencv.ui.theme.util.ToastDefaults
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,6 +57,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -121,6 +136,17 @@ fun ExportScreen(
                 checked = uiState.saveToExternalStorage,
                 onCheckedChange = viewModel::updateExternalStorage
             ) { Text("保存到公共文档目录") }
+            CheckboxWithLabel(
+                checked = uiState.uploadToCloud,
+                onCheckedChange = viewModel::updateUploadToCloud
+            ) { Text("上传到云端") }
+
+            Spacer(modifier = Modifier.height(40.dp))
+            if (viewModel.isLoading) {
+                Row(Modifier.fillMaxWidth(),horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+                    CircularProgressIndicator()
+                }
+            }
         }
     }
 }
@@ -133,6 +159,7 @@ class ExportViewModel: ViewModel() {
         const val TAG = "ExportViewModel"
     }
 
+    var isLoading  by mutableStateOf(false)
     fun updateFileName(name: String) {
         _uiState.update { it.copy(fileName = name) }
     }
@@ -150,6 +177,7 @@ class ExportViewModel: ViewModel() {
 
     fun exportDocument() = viewModelScope.launch (Dispatchers.IO){
         val result = try {
+            isLoading =true
             val filePaths = mutableListOf<String>()
 
             Log.d(TAG,"private ${_uiState.value.saveToPrivateStorage}")
@@ -157,6 +185,12 @@ class ExportViewModel: ViewModel() {
             if (_uiState.value.saveToPrivateStorage) {
                 val path = saveToPrivateDir()
                 filePaths += path
+            }
+            if (_uiState.value.uploadToCloud) {
+
+                Log.d(TAG, "uploadToCloud start")
+                uploadToCould()
+
             }
             Log.d(TAG,filePaths.toString())
             if (_uiState.value.saveToExternalStorage) {
@@ -170,8 +204,11 @@ class ExportViewModel: ViewModel() {
                 filePaths += path
             }
             Log.d(TAG,filePaths.toString())
+            isLoading =false
             ExportResult.Success("文件保存到：${filePaths.joinToString()}")
+
         } catch (e: Exception) {
+            isLoading = false
             Log.e(TAG,e.message?:"null")
             ExportResult.Error(e.message)
         }
@@ -190,6 +227,41 @@ class ExportViewModel: ViewModel() {
         return file?.absolutePath?:""
     }
 
+    private fun uploadToCould(){
+        val dir = OpenCvApp.appContext!!.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+        val file = PdfManager.saveBitmapsAsPdf(OpenCvApp.sharedViewModel!!.imageCroped,_uiState.value.fileName,dir!!,true)
+
+        val pdfFile = LCFile(_uiState.value.fileName+".pdf",file)
+        //先把封面上传
+        val pngFile = LCFile(_uiState.value.fileName+".png",
+            DocumentRepositoryImpl.generateThumbnail(file!!)?.bitmapToBytes() ?: ByteArray(0)
+        )
+        pngFile.save()
+        pdfFile.save()
+        //保存pdf 元数据
+        val pdfRecord = PdfRecord().apply {
+            put(USER_ID, LCUser.currentUser().username)
+            put(PDF_Preview_Image, pngFile.url)
+            put(DATE,file.lastModified())
+            put(NAME, _uiState.value.fileName+".pdf")
+            put(PDF_URL, pdfFile.url)
+
+        }
+        pdfRecord.save()
+        //最后删除文件
+        file.delete()
+    }
+
+    fun Bitmap.bitmapToBytes(format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG): ByteArray {
+        val outputStream = ByteArrayOutputStream()
+        this.compress(format, 100, outputStream) // 压缩质量 100 表示不压缩
+        return outputStream.toByteArray()
+    }
+    private fun linkFileToUser(file: LCFile) {
+        val user = LCUser.currentUser()
+        user.add("files", file) // 添加至用户字段
+        user.saveInBackground().subscribe()
+    }
     private fun saveToPublicDir(): String {
         val dir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOCUMENTS
@@ -211,6 +283,9 @@ class ExportViewModel: ViewModel() {
 
     fun updateExternalStorage(b: Boolean) {
         _uiState.update { it.copy(saveToExternalStorage = b) }
+    }
+    fun updateUploadToCloud(b: Boolean) {
+        _uiState.update { it.copy(uploadToCloud = b) }
     }
 }
 
@@ -244,6 +319,7 @@ data class ExportUIState(
     val fileName: String = "",
     val saveToPrivateStorage: Boolean = true,
     val saveToExternalStorage: Boolean = true,
+    val uploadToCloud: Boolean = true,
     val exportResult: ExportResult? = null
 )
 

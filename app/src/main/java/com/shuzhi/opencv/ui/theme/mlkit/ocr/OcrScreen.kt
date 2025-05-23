@@ -41,6 +41,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,12 +71,13 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.google.mlkit.vision.text.Text
 import com.shuzhi.opencv.R
+import com.shuzhi.opencv.ui.theme.app.OpenCvApp
 import com.shuzhi.opencv.ui.theme.util.UiState
 
 
 
 @Composable
-fun OCrScreenWithScaffold() {
+fun OCrScreenWithScaffold(index :Int) {
 
     Scaffold(
         topBar = {
@@ -85,24 +87,30 @@ fun OCrScreenWithScaffold() {
         },
         content = {paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
-                OcrScreen()
+                OcrScreen(index)
             }
         },
     )
 }
 @Composable
 fun OcrScreen(
+    index: Int,
     viewModel: OcrViewModel = hiltViewModel()
 ) {
+    var indexIn by remember {  mutableIntStateOf(index) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
 
+    if (indexIn>=0) {
+        viewModel.bitmapFromLastPage = OpenCvApp.sharedViewModel!!.imageCroped[indexIn]
+    }
     // 图片选择器
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         imageUri = uri
+        indexIn =-1
     }
     Column(
         modifier = Modifier
@@ -117,7 +125,7 @@ fun OcrScreen(
                 label = "ImageTransition"
             ) { targetUri ->
                 AsyncImage(
-                    model = targetUri,
+                    model = if (indexIn>=0)  viewModel.bitmapFromLastPage  else targetUri,
                     contentDescription = "Selected image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -134,11 +142,16 @@ fun OcrScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (imageUri != null) {
+            if (imageUri != null||indexIn >= 0) {
 
                 // 识别按钮
                 Button(onClick = {
-                    val bitmap = context.loadBitmap(imageUri!!)
+                    var bitmap :Bitmap?= null
+                    bitmap = if (imageUri == null) {
+                        viewModel.bitmapFromLastPage
+                    }else{
+                        context.loadBitmap(imageUri!!)
+                    }
                     bitmap?.let { viewModel.processImage(it) }
                 }) {
                     Text("开始识别")

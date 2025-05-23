@@ -20,16 +20,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +60,12 @@ import androidx.compose.ui.window.Dialog
 import com.shuzhi.opencv.R
 import com.shuzhi.opencv.ui.theme.app.OpenCvApp
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.model.DocumentItem
+import com.shuzhi.opencv.ui.theme.pdf.pdfpreview.ui.ActionButton
 import com.shuzhi.opencv.ui.theme.photo.PhotoManager
+import jp.co.cyberagent.android.gpuimage.GPUImage
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageThresholdEdgeDetectionFilter
 
 /**
  *@author :yinxiaolong
@@ -60,10 +74,11 @@ import com.shuzhi.opencv.ui.theme.photo.PhotoManager
  */
 val toolMap = mutableMapOf<String, Int>().apply {
     this["添加"] = R.drawable.icon_upload
-    this["筛选器"] = R.drawable.filter
+    this["滤镜"] = R.drawable.filter
     this["裁切"] = R.drawable.crop
     this["旋转"] = R.drawable.rotate
     this["重新排序"] = R.drawable.rank
+    this["ocr"] = R.drawable.ocr
     this["删除"] = R.drawable.delete
 }
 
@@ -133,6 +148,7 @@ fun SelectedImageScreen(mainViewModel: MainViewModel,vm:SelectedImageViewModel,o
         }
 
     }
+
     if (vm.showDeleteDialog) {
         DeleteDialog(
             onDisMiss = {
@@ -179,4 +195,57 @@ fun DeleteDialog(onDisMiss:()->Unit,onConform:()->Unit,onCancel:()->Unit) {
             }
 
     }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActionBottomSheet(
+    onOpen: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column {
+        LazyRow(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                .background(color = Color.White)
+        ) {
+            item {
+                ActionButton(
+                    icon = Icons.Default.Done,
+                    text = "Filter1",
+                    onClick = {
+                        onOpen()
+                        val gpuImage = GPUImage(OpenCvApp.appContext)
+                        gpuImage.setImage(OpenCvApp.sharedViewModel!!.imageCroped[0])
+                        gpuImage.setFilter(GPUImageThresholdEdgeDetectionFilter())
+                        OpenCvApp.sharedViewModel!!.imageCroped[0] =
+                            gpuImage.bitmapWithFilterApplied
+                    }
+                )
+            }
+            item {
+                ActionButton(
+                    icon = Icons.Default.Share,
+                    text = "filter2",
+                    onClick = {
+                        onOpen()
+                    }
+                )
+            }
+//            ActionButton(
+//                icon = Icons.Default.Edit,
+//                text = "编辑信息",
+//                onClick = { /* TODO */ }
+//            )
+        }
+        Spacer(Modifier.width(24.dp))
+
+        OutlinedButton(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("关闭")
+        }
+    }
+
 }

@@ -2,6 +2,8 @@ package com.shuzhi.opencv.ui.theme.app
 
 import android.app.Application
 import android.content.Context
+import cn.leancloud.LeanCloud
+import cn.leancloud.core.LeanService
 import com.shuzhi.opencv.ui.theme.mainPage.MainViewModel
 import dagger.hilt.android.HiltAndroidApp
 import me.pqpo.smartcropperlib.SmartCropper
@@ -23,6 +25,11 @@ class OpenCvApp : Application() {
             appContext = context
             //图像检测
             SmartCropper.buildImageDetector(context)
+            LeanCloud.initialize(
+                context,
+                "93SYdQVOtKPYltllBEpdhV6z-gzGzoHsz",
+                "QlqutzgYXcW0vUx3knFxTgeZ",
+                "https://93sydqvo.lc-cn-n1-shared.com")
         }
     }
     override fun onCreate() {
@@ -32,6 +39,12 @@ class OpenCvApp : Application() {
         SmartCropper.buildImageDetector(this)
         //opencv
      //   val isOpenCVLoaderInit = OpenCVLoader.initLocal()
+//        LeanCloud.setServer(LeanService.API,"https://93sydqvo.lc-cn-n1-shared.com")
+        LeanCloud.initialize(
+            this,
+            "93SYdQVOtKPYltllBEpdhV6z-gzGzoHsz",
+            "QlqutzgYXcW0vUx3knFxTgeZ",
+            "https://93sydqvo.lc-cn-n1-shared.com")
     }
 
 }

@@ -33,14 +33,11 @@ class DocumentViewModel @Inject constructor(
     private val _loadingState = MutableStateFlow(false)
     val loadingState: StateFlow<Boolean> = _loadingState.asStateFlow()
 
-    init {
-        loadDocuments()
-    }
 
-    private fun loadDocuments() {
+     fun loadDocuments(isRemote: Boolean = false) {
         viewModelScope.launch(ioDispatcher) {
             _loadingState.value = true
-            _documents.value = repository.loadLocalDocuments()
+            _documents.value = if (isRemote) repository.loadRemoteDocuments() else repository.loadLocalDocuments()
             Log.d("DocumentViewModel", "Documents loaded: ${documents.value.size}")
             _loadingState.value = false
         }

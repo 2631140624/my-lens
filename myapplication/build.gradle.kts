@@ -59,6 +59,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(project(":app"))
+    //implementation("com.shuzhi.opencv:document:v0.0.2")
 
     kapt("com.google.dagger:hilt-android-compiler:2.55")
 

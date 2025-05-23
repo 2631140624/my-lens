@@ -19,4 +19,6 @@ class MainViewModel : ViewModel() {
     var isPermissionGranted  by mutableStateOf(false)
     var imageForCrop :Bitmap ? = null
     val imageCroped : SnapshotStateList<Bitmap> = mutableStateListOf()
+
+    var userName  by mutableStateOf("")
 }
